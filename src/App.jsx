@@ -5,9 +5,12 @@ import raceOptions from "./assets/data/raceoptions";
 import "./App.css";
 
 let radioIndex = 0;
+let driverIndex = 0;
 
 function App() {
   const [radioUrls, setRadioUrls] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+
   useEffect(() => {
     getRadio();
   }, []);
@@ -26,9 +29,20 @@ function App() {
       });
   };
 
+  // Cascader for selecting race
   const onChange = (value) => {
     console.log(value);
+    fetch(`https://api.openf1.org/v1/drivers?meeting_key=${value}`)
+      .then((response) => response.json())
+      .then((data) => {
+        const recordingUrls = data.map((item) => item.full_name);
+        recordingUrls.forEach((name) => {
+          setDrivers((r) => [...r, { id: driverIndex++, name: name }]);
+        });
+        console.log(drivers);
+      });
   };
+
   // https://api.openf1.org/v1/drivers?meeting_key=1226
   return (
     <>
