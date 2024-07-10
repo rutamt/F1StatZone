@@ -5,19 +5,19 @@ import raceOptions from "./assets/data/raceoptions";
 import "./App.css";
 
 let radioIndex = 0;
-let driverIndex = 0;
 
 function App() {
   const [radioUrls, setRadioUrls] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  const [sessionId, setSessionId] = useState("");
 
   useEffect(() => {
-    getRadio();
+    // getRadio();
   }, []);
 
-  const getRadio = () => {
+  const getRadio = (number) => {
     fetch(
-      "https://api.openf1.org/v1/team_radio?session_key=9158&driver_number=11"
+      `https://api.openf1.org/v1/team_radio?session_key=${sessionId}&driver_number=${number}`
     )
       .then((response) => response.json())
       .then((data) => {
@@ -25,22 +25,35 @@ function App() {
         recordingUrls.forEach((url) => {
           setRadioUrls((r) => [...r, { id: radioIndex++, url }]);
         });
-        console.log(recordingUrls);
+        console.log("url", recordingUrls);
       });
   };
 
   // Cascader for selecting race
   const onChange = (value) => {
-    console.log(value);
-    fetch(`https://api.openf1.org/v1/drivers?meeting_key=${value}`)
+    setSessionId(value[1]);
+    console.log(value[1]);
+    fetch(`https://api.openf1.org/v1/drivers?session_key=${value[1]}`)
       .then((response) => response.json())
       .then((data) => {
-        const recordingUrls = data.map((item) => item.full_name);
-        recordingUrls.forEach((name) => {
-          setDrivers((r) => [...r, { id: driverIndex++, name: name }]);
+        console.log(data);
+        const recordingUrls = data.map((item) => item);
+        recordingUrls.forEach((item) => {
+          setDrivers((r) => [
+            ...r,
+            {
+              value: item.driver_number,
+              label: item.full_name,
+            },
+          ]);
         });
         console.log(drivers);
       });
+  };
+
+  // Getting the radios on change of the second cascader
+  const onDriverChange = (value) => {
+    getRadio(value);
   };
 
   // https://api.openf1.org/v1/drivers?meeting_key=1226
@@ -56,6 +69,8 @@ function App() {
           <source src={radio.url} />
         </audio>
       ))}
+
+      {drivers && <Cascader onChange={onDriverChange} options={drivers} />}
     </>
   );
 }
