@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Cascader } from "antd";
+import { Cascader, Checkbox } from "antd";
 
 import raceOptions from "./assets/data/raceoptions";
 import "./App.css";
@@ -10,6 +10,7 @@ function App() {
   const [radioUrls, setRadioUrls] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [sessionId, setSessionId] = useState("");
+  const [compare, setCompare] = useState(false);
 
   useEffect(() => {
     // getRadio();
@@ -56,21 +57,36 @@ function App() {
     getRadio(value);
   };
 
+  const onCheckChange = (e) => {
+    console.log(`checked = ${e.target.checked}`);
+    setCompare(e.target.checked);
+  };
+
   // https://api.openf1.org/v1/drivers?meeting_key=1226
   return (
     <>
+      <Checkbox onChange={onCheckChange}>Compare</Checkbox>
       <Cascader
         options={raceOptions}
         onChange={onChange}
         placeholder="Please select"
       />
-      {radioUrls.map((radio) => (
-        <audio controls key={radio.id}>
-          <source src={radio.url} />
-        </audio>
-      ))}
-
-      {drivers && <Cascader onChange={onDriverChange} options={drivers} />}
+      {drivers && (
+        <Cascader
+          onChange={onDriverChange}
+          options={drivers}
+          {...(compare ? { multiple: true } : {})}
+        />
+      )}
+      <ol style={{ listStyle: "none" }}>
+        {radioUrls.map((radio) => (
+          <li>
+            <audio controls key={radio.id}>
+              <source src={radio.url} />
+            </audio>
+          </li>
+        ))}
+      </ol>
     </>
   );
 }
