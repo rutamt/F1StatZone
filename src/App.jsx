@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Cascader, Checkbox } from "antd";
+import { Cascader, InputNumber } from "antd";
 
 import raceOptions from "./assets/data/raceoptions";
+import LapDataComponent from "./components/LapDataComponent";
+import DriverDisplay from "./components/DriverDisplay";
 import "./App.css";
 
 let radioIndex = 0;
@@ -10,13 +12,18 @@ function App() {
   const [radioUrls, setRadioUrls] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [sessionId, setSessionId] = useState("");
-  const [compare, setCompare] = useState(false);
+  const [lapData, setLapData] = useState([]);
+  const [mapLaps, setMaxLaps] = useState(0);
+  const [currentLap, setCurrentLap] = useState(null);
+  const [driverData, setDriverData] = useState(null);
 
   useEffect(() => {
     // getRadio();
   }, []);
 
+  // Gets the team radio messages given a driver number (session number already known)
   const getRadio = (number) => {
+    setRadioUrls([]);
     fetch(
       `https://api.openf1.org/v1/team_radio?session_key=${sessionId}&driver_number=${number}`
     )
@@ -34,6 +41,8 @@ function App() {
   const onChange = (value) => {
     setSessionId(value[1]);
     console.log(value[1]);
+
+    // Finding all drivers
     fetch(`https://api.openf1.org/v1/drivers?session_key=${value[1]}`)
       .then((response) => response.json())
       .then((data) => {
@@ -52,41 +61,77 @@ function App() {
       });
   };
 
+  // Gets the data of all the laps a driver did in a race
+  const getLapData = (value) => {
+    fetch(
+      `https://api.openf1.org/v1/laps?session_key=${sessionId}&driver_number=${value}`
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setLapData(data);
+        const maxLapNumber = Math.max(...data.map((lap) => lap.lap_number));
+        console.log("Max laps: ", maxLapNumber);
+        setMaxLaps(maxLapNumber);
+      });
+  };
+
+  // Gets the data of the selected driver
+  const getDriverData = (value) => {
+    fetch(
+      `https://api.openf1.org/v1/drivers?session_key=${sessionId}&driver_number=${value}`
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setDriverData(data[0]);
+      });
+  };
+
   // Getting the radios on change of the second cascader
   const onDriverChange = (value) => {
     getRadio(value);
+    getLapData(value);
+    getDriverData(value);
   };
 
-  const onCheckChange = (e) => {
-    console.log(`checked = ${e.target.checked}`);
-    setCompare(e.target.checked);
+  const onLapNumChange = (lapNumber) => {
+    const currentLapData = lapData.filter(
+      (lap) => lap.lap_number === lapNumber
+    );
+    setCurrentLap(currentLapData[0]);
+    console.log(currentLapData[0].segments_sector_1);
   };
 
   // https://api.openf1.org/v1/drivers?meeting_key=1226
   return (
     <>
-      <Checkbox onChange={onCheckChange}>Compare</Checkbox>
       <Cascader
         options={raceOptions}
         onChange={onChange}
         placeholder="Please select"
       />
-      {drivers && (
-        <Cascader
-          onChange={onDriverChange}
-          options={drivers}
-          {...(compare ? { multiple: true } : {})}
-        />
-      )}
+
+      <Cascader onChange={onDriverChange} options={drivers} />
+      <InputNumber min={1} max={mapLaps} onChange={onLapNumChange} />
       <ol style={{ listStyle: "none" }}>
         {radioUrls.map((radio) => (
-          <li>
-            <audio controls key={radio.id}>
+          <li key={radio.id}>
+            <audio controls>
               <source src={radio.url} />
             </audio>
           </li>
         ))}
       </ol>
+      {currentLap ? (
+        <LapDataComponent currentLap={currentLap} />
+      ) : (
+        <p>loading lap data...</p>
+      )}
+      {driverData ? (
+        <DriverDisplay driver={driverData} />
+      ) : (
+        <p>loading driver data...</p>
+      )}
     </>
   );
 }
