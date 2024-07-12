@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Cascader, InputNumber } from "antd";
+import { Cascader, InputNumber, Space } from "antd";
 
 import raceOptions from "./assets/data/raceoptions";
 import LapDataComponent from "./components/LapDataComponent";
@@ -105,14 +105,16 @@ function App() {
   // https://api.openf1.org/v1/drivers?meeting_key=1226
   return (
     <>
-      <Cascader
-        options={raceOptions}
-        onChange={onChange}
-        placeholder="Please select"
-      />
+      <Space>
+        <Cascader
+          options={raceOptions}
+          onChange={onChange}
+          placeholder="Please select"
+        />
 
-      <Cascader onChange={onDriverChange} options={drivers} />
-      <InputNumber min={1} max={mapLaps} onChange={onLapNumChange} />
+        <Cascader onChange={onDriverChange} options={drivers} />
+        <InputNumber min={1} max={mapLaps} onChange={onLapNumChange} />
+      </Space>
       <ol style={{ listStyle: "none" }}>
         {radioUrls.map((radio) => (
           <li key={radio.id}>
