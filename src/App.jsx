@@ -91,7 +91,32 @@ function App() {
     )
       .then((response) => response.json())
       .then((data) => {
-        setDriverData(data[0]);
+        if (data && data.length > 0) {
+          setDriverData(data[0]);
+        } else {
+          // Make another API call or handle the case when data is null
+          fetch(
+            `https://api.openf1.org/v1/drivers?driver_number=${value}&session_key=${sessionId}`
+          )
+            .then((response) => response.json())
+            .then((secondData) => {
+              if (secondData && secondData.length > 0) {
+                setDriverData(secondData[0]);
+              } else {
+                // Handle case when no data is found from both APIs
+                console.log("No driver data found");
+                // Optionally, setDriverData(null) or handle accordingly
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching data from second API:", error);
+              // Handle error
+            });
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching data from first API:", error);
+        // Handle error
       });
   };
 
