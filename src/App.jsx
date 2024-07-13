@@ -4,6 +4,7 @@ import { Cascader, InputNumber, Space } from "antd";
 import raceOptions from "./assets/data/raceoptions";
 import LapDataComponent from "./components/LapDataComponent";
 import DriverDisplay from "./components/DriverDisplay";
+import f1DriverCountries from "./assets/data/f1drivercountries";
 import "./App.css";
 
 let radioIndex = 0;
@@ -76,10 +77,17 @@ function App() {
       });
   };
 
+  // Getting a driver's 3 digit ISO code from number
+  const findCountryCode = (driverNumber) => {
+    return f1DriverCountries[driverNumber] || "Unknown"; // Returns the country code or 'Unknown' if not found
+  };
+
   // Gets the data of the selected driver
   const getDriverData = (value) => {
     fetch(
-      `https://api.openf1.org/v1/drivers?session_key=${sessionId}&driver_number=${value}`
+      `https://api.openf1.org/v1/drivers?country_code=${findCountryCode(
+        value
+      )}&driver_number=${value}`
     )
       .then((response) => response.json())
       .then((data) => {
